@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Project Planner
 
-## Getting Started
+Turn rough app ideas into structured, editable project briefs using AI.
 
-First, run the development server:
+Describe an app idea, and it generates a full brief — summary, target users, features, tech stack, routes, data model, build phases, risks, and a ready-to-use prompt for AI coding tools.
+
+## How it works
+
+1. Enter your app idea on the home page
+2. AI generates a structured project brief
+3. Edit any section inline
+4. View a visual data model graph
+5. Copy the starter prompt for Cursor, Claude, or any AI coding tool
+
+Everything is stored in your browser — no accounts, no backend.
+
+## Tech stack
+
+- **Next.js 16** (App Router)
+- **TypeScript**
+- **Tailwind CSS v4**
+- **shadcn/ui**
+- **AI SDK** + **OpenRouter**
+- **React Flow** + **Dagre**
+- **Zod** for schema validation
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repo-url>
+cd ai-project-planner
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Add your OpenRouter API key to `.env.local`:
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```
+OPENROUTER_API_KEY=sk-or-v1-...
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Then:
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Open [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Variable | Required | Description |
+|---|---|---|
+| `OPENROUTER_API_KEY` | Yes | API key from [openrouter.ai/keys](https://openrouter.ai/keys) |
 
-## Deploy on Vercel
+## Project structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+├── app/
+│   ├── api/generate/     # AI generation endpoint
+│   ├── brief/            # Editable project brief page
+│   ├── prompt/           # Data model viz + starter prompt
+│   ├── page.tsx          # Home / idea input
+│   ├── layout.tsx        # Root layout
+│   └── globals.css       # Global styles + theme
+├── components/
+│   ├── ui/               # shadcn/ui primitives
+│   ├── site-header.tsx
+│   ├── site-footer.tsx
+│   ├── theme-toggle.tsx
+│   ├── step-indicator.tsx
+│   └── editable-section.tsx
+├── lib/
+│   ├── store.ts          # localStorage persistence
+│   ├── types.ts          # TypeScript types
+│   ├── utils.ts
+│   └── zod-schema.ts     # Zod schemas
+└── public/
+```
