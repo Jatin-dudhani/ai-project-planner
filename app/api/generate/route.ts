@@ -265,7 +265,7 @@ export async function POST(req: Request) {
         let response
         try {
           response = await ai.models.generateContent({
-            model: "gemini-3.1-flash-lite",
+            model: "gemini-3.5-flash-lite",
             contents: `You are a Principal Software Architect. Given this app idea:
 "${cleanIdea}"
 
@@ -388,7 +388,7 @@ Generate a thorough, practical, professional project brief in JSON matching this
           }
         })
       } catch (liteErr) {
-            console.warn("Lite model failed, attempting gemini-3.8-flash:", liteErr)
+        console.warn("gemini-3.5-flash-lite failed, attempting gemini-3.8-flash:", liteErr)
             try {
               response = await ai.models.generateContent({
                 model: "gemini-3.8-flash",

@@ -8,7 +8,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       uptimeSeconds: Math.floor(process.uptime()),
       environment: process.env.NODE_ENV || "development",
-      aiProvider: process.env.GEMINI_API_KEY ? "Google Gemini (gemini-3.1-flash-lite)" : "Deterministic Architect Engine",
+      aiProvider: process.env.GEMINI_API_KEY ? "Google Gemini (gemini-3.5-flash-lite)" : "Deterministic Architect Engine",
       endpoints: [
         { path: "/api/generate", method: "POST", description: "Generate project brief from concept idea" },
         { path: "/api/refine", method: "POST", description: "Refine or expand sections of an existing brief" },

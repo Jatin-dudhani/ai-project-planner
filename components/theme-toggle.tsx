@@ -17,7 +17,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <div
-        className="flex items-center gap-0.5 p-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900 h-8 w-[88px]"
+        className="flex items-center gap-0.5 p-0.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 h-8 w-[88px]"
         aria-hidden="true"
       />
     )
@@ -33,7 +33,7 @@ export function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="Color theme"
-      className="flex items-center gap-0.5 p-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900"
+      className="flex items-center gap-0.5 p-0.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-500"
     >
       {themes.map(({ value, label, icon: Icon }) => {
         const isActive = theme === value
@@ -46,10 +46,10 @@ export function ThemeToggle() {
             aria-label={`${label} theme`}
             title={`Switch to ${label} theme`}
             onClick={() => setTheme(value)}
-            className={`flex items-center justify-center size-7 rounded-md transition-all ${
+            className={`flex items-center justify-center size-7 rounded-[5px] transition-all ${
               isActive
-                ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-800 dark:text-neutral-100 font-medium"
-                : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50"
+                ? "bg-white text-zinc-950 shadow-xs dark:bg-zinc-800 dark:text-zinc-100 font-medium"
+                : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
             }`}
           >
             <Icon className="size-3.5" />

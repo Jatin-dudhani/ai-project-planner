@@ -43,15 +43,31 @@ Instructions: ${instructions || "Deepen technical rigor and add production-grade
 
 Return the complete, improved project brief in JSON with the exact same structure.`
 
-        const response = await ai.models.generateContent({
-          model: "gemini-3.1-flash-lite",
-          contents: prompt,
-          config: {
-            responseMimeType: "application/json",
-          },
-        })
+        let response
+        try {
+          response = await ai.models.generateContent({
+            model: "gemini-3.5-flash-lite",
+            contents: prompt,
+            config: {
+              responseMimeType: "application/json",
+            },
+          })
+        } catch (liteErr) {
+          console.warn("gemini-3.5-flash-lite refine failed, attempting gemini-3.8-flash:", liteErr)
+          try {
+            response = await ai.models.generateContent({
+              model: "gemini-3.8-flash",
+              contents: prompt,
+              config: {
+                responseMimeType: "application/json",
+              },
+            })
+          } catch (flashErr) {
+            console.warn("Flash refine model also failed:", flashErr)
+          }
+        }
 
-        if (response.text) {
+        if (response?.text) {
           const parsed = JSON.parse(response.text) as ProjectBrief
           if (parsed && parsed.summary && parsed.coreFeatures) {
             return NextResponse.json(parsed)

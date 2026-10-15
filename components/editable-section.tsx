@@ -35,15 +35,15 @@ export function EditableSection({
   }
 
   return (
-    <div className={cn("group relative rounded-lg border p-4", className)}>
+    <div className={cn("group relative rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 shadow-sm", className)}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 space-y-1">
-          <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
+          <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</h4>
           {isEditing ? (
             <div className="space-y-2">
               {multiline ? (
                 <textarea
-                  className="flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                  className="flex min-h-20 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-white"
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
                   autoFocus

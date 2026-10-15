@@ -1,10 +1,1 @@
-{
-  "name": "AI Project Planner",
-  "description": "Transform application concepts into structured technical briefs, relational schemas, route hierarchies, and master AI coding prompts.",
-  "capabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}
+{"name":"ai-project-planner","description":"Transform application concepts into structured technical briefs, relational schemas, route hierarchies, and master AI coding prompts.","capabilities":["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"],"majorCapabilities":["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]}

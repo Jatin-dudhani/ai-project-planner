@@ -26,6 +26,7 @@ export const riskSchema = z.object({
 });
 
 export const projectBriefSchema = z.object({
+  projectName: z.string().optional(),
   summary: z.string(),
   targetUsers: z.array(z.string()),
   coreFeatures: z.array(z.string()),

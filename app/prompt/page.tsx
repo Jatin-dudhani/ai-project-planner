@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   Copy,
@@ -11,9 +10,10 @@ import {
   RotateCcw,
   Download,
   Terminal,
-  FileCode,
   Database,
   Layers,
+  ShieldCheck,
+  FileCode2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StepIndicator } from "@/components/step-indicator"
@@ -24,16 +24,54 @@ import type { ProjectBrief } from "@/lib/types"
 const DataModelFlow = dynamic(() => import("./data-model-flow"), {
   ssr: false,
   loading: () => (
-    <div className="h-[360px] rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-100/50 dark:bg-neutral-900/50 flex items-center justify-center text-xs text-neutral-400">
+    <div className="h-[380px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 flex items-center justify-center text-xs text-zinc-400 font-mono">
       Initializing ERD Topology...
     </div>
   ),
 })
 
-type PromptMode = "master" | "database" | "api"
+type PromptMode = "master" | "database" | "api" | "tdd"
+
+interface TabConfig {
+  id: PromptMode
+  label: string
+  filename: string
+  language: string
+  icon: typeof Terminal
+}
+
+const TABS: TabConfig[] = [
+  {
+    id: "master",
+    label: "Master Scaffold",
+    filename: "CURSOR_RULES.md",
+    language: "Markdown",
+    icon: Terminal,
+  },
+  {
+    id: "database",
+    label: "SQL Schema",
+    filename: "schema.sql",
+    language: "PostgreSQL",
+    icon: Database,
+  },
+  {
+    id: "api",
+    label: "API Contracts",
+    filename: "routes.ts",
+    language: "TypeScript",
+    icon: Layers,
+  },
+  {
+    id: "tdd",
+    label: "TDD & Tests",
+    filename: "test-specification.md",
+    language: "Markdown",
+    icon: ShieldCheck,
+  },
+]
 
 export default function PromptPage() {
-  const router = useRouter()
   const [brief] = useState<ProjectBrief>(() => loadBriefOrSample())
   const [activeTab, setActiveTab] = useState<PromptMode>("master")
   const [copied, setCopied] = useState(false)
@@ -45,6 +83,7 @@ export default function PromptPage() {
       return `/* ==========================================================================
    DATABASE SCHEMA SPECIFICATION & MIGRATIONS
    Project: ${brief.projectName || "Project"}
+   Generated: ${new Date().toISOString()}
    ========================================================================== */
 
 -- Core relational entities:
@@ -68,7 +107,10 @@ ${brief.dataModel
       return `/* ==========================================================================
    API ROUTE HIERARCHY & CONTRACTS
    Project: ${brief.projectName || "Project"}
+   Framework: Next.js App Router (TypeScript)
    ========================================================================== */
+
+import { NextResponse } from "next/server";
 
 ${brief.routes
   .map(
@@ -77,9 +119,17 @@ ${brief.routes
  * Description: ${r.description}
  */
 export async function ${r.path.includes("api") ? "POST" : "GET"}(req: Request) {
-  // TODO: Validate incoming payload with Zod schema
-  // TODO: Check user session / authentication
-  // TODO: Execute transactional query
+  try {
+    // 1. Validate payload with Zod schema
+    // 2. Enforce session and authorization policies
+    // 3. Execute transactional query logic
+    return NextResponse.json({ success: true, message: "Handled ${r.path}" });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 }
 `
   )
@@ -87,8 +137,43 @@ export async function ${r.path.includes("api") ? "POST" : "GET"}(req: Request) {
 `
     }
 
+    if (mode === "tdd") {
+      return `# TDD IMPLEMENTATION & TEST SPECIFICATION: ${brief.projectName || "Application"}
+
+## Objective
+Implement comprehensive unit, integration, and E2E test suites before building application features.
+
+## Critical Route Test Suites
+${brief.routes
+  .map(
+    (r) => `### Route Suite: ${r.path} (${r.description})
+- [ ] Test 200 OK with valid session and validated payload
+- [ ] Test 400 Bad Request with missing or invalid Zod fields
+- [ ] Test 401/403 Unauthorized without proper session authentication
+- [ ] Test 500 boundary handling and graceful degradation`
+  )
+  .join("\n\n")}
+
+## Data Integrity & Entity Tests
+${brief.dataModel
+  .map(
+    (e) => `### Entity Test: ${e.name}
+- [ ] Verify primary key uniqueness and non-null constraints
+- [ ] Verify required field constraints: ${e.fields.map((f) => f.name).join(", ")}
+- [ ] Test cascading deletes and relational foreign key integrity`
+  )
+  .join("\n\n")}
+
+## Recommended Testing Tooling
+- Unit & Component: Vitest + React Testing Library
+- E2E Integration: Playwright
+- Network Mocking: Mock Service Worker (MSW)`
+    }
+
     // Default Master prompt
-    return brief.starterPrompt || `# PROJECT STARTER PROMPT: ${brief.projectName || "Application"}
+    return (
+      brief.starterPrompt ||
+      `# PROJECT STARTER PROMPT: ${brief.projectName || "Application"}
 
 ## Summary
 ${brief.summary}
@@ -107,8 +192,10 @@ ${brief.routes.map((r) => `- \`${r.path}\`: ${r.description}`).join("\n")}
 ## Phased Implementation
 ${brief.buildPhases.map((p) => `### ${p.phase}\n${p.tasks.map((t) => `- [ ] ${t}`).join("\n")}`).join("\n\n")}
 `
+    )
   }
 
+  const currentTab = TABS.find((t) => t.id === activeTab) || TABS[0]
   const currentPrompt = getPromptContent(activeTab)
   const charCount = currentPrompt.length
   const estimatedTokens = Math.round(charCount / 4)
@@ -117,21 +204,15 @@ ${brief.buildPhases.map((p) => `### ${p.phase}\n${p.tasks.map((t) => `- [ ] ${t}
     try {
       await navigator.clipboard.writeText(currentPrompt)
       setCopied(true)
-      toast.success("AI prompt copied to clipboard!")
+      toast.success("Prompt copied.")
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      toast.error("Failed to copy. Please select and copy manually.")
+      toast.error("Failed to copy.")
     }
   }
 
   function downloadPromptFile() {
-    const filename =
-      activeTab === "database"
-        ? "schema.sql"
-        : activeTab === "api"
-        ? "routes.ts"
-        : "CURSOR_RULES.md"
-
+    const filename = currentTab.filename
     const blob = new Blob([currentPrompt], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
@@ -143,17 +224,17 @@ ${brief.buildPhases.map((p) => `### ${p.phase}\n${p.tasks.map((t) => `- [ ] ${t}
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 py-2">
+    <div className="max-w-6xl mx-auto space-y-6 py-4 sm:py-6">
       <StepIndicator />
 
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-5">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
             Starter Prompt &amp; Topology
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-500 mt-1">
-            Visual entity relationship topology and master coding prompts engineered for AI assistants.
+          <p className="text-xs sm:text-sm text-zinc-500 mt-1 max-w-xl">
+            Interactive relational schema and master prompt templates engineered for AI coding assistants.
           </p>
         </div>
 
@@ -162,7 +243,7 @@ ${brief.buildPhases.map((p) => `### ${p.phase}\n${p.tasks.map((t) => `- [ ] ${t}
             variant="outline"
             size="sm"
             asChild
-            className="h-8 text-xs text-neutral-700 dark:text-neutral-300"
+            className="h-8 text-xs border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
             <Link href="/brief">
               <ArrowLeft className="size-3.5 mr-1.5" />
@@ -174,7 +255,7 @@ ${brief.buildPhases.map((p) => `### ${p.phase}\n${p.tasks.map((t) => `- [ ] ${t}
             variant="outline"
             size="sm"
             asChild
-            className="h-8 text-xs text-neutral-700 dark:text-neutral-300"
+            className="h-8 text-xs border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
             <Link href="/">
               <RotateCcw className="size-3.5 mr-1.5" />
@@ -187,63 +268,61 @@ ${brief.buildPhases.map((p) => `### ${p.phase}\n${p.tasks.map((t) => `- [ ] ${t}
       {/* Visual ERD Topology */}
       {entities.length > 0 && <DataModelFlow entities={entities} />}
 
-      {/* Prompt Workbench Studio */}
-      <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden">
-        {/* Studio Toolbar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/40">
-          <div className="flex items-center gap-1.5 bg-neutral-200/70 dark:bg-neutral-800 p-1 rounded-lg">
-            <button
-              type="button"
-              onClick={() => setActiveTab("master")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                activeTab === "master"
-                  ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 shadow-sm"
-                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
-              }`}
-            >
-              <Terminal className="size-3.5" />
-              Master Scaffold
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("database")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                activeTab === "database"
-                  ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 shadow-sm"
-                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
-              }`}
-            >
-              <Database className="size-3.5" />
-              SQL Schema
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("api")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                activeTab === "api"
-                  ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 shadow-sm"
-                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
-              }`}
-            >
-              <Layers className="size-3.5" />
-              API Handlers
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-neutral-400">
-              <span className="tabular-nums">{charCount.toLocaleString()} chars</span>
-              <span aria-hidden="true">·</span>
-              <span className="tabular-nums">~{estimatedTokens.toLocaleString()} tokens</span>
+      {/* Prompt Workbench Studio - Minimalist Code Window */}
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 shadow-xs overflow-hidden">
+        {/* Title Bar */}
+        <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-full bg-zinc-300 dark:bg-zinc-700 inline-block" />
+              <span className="size-2.5 rounded-full bg-zinc-300 dark:bg-zinc-700 inline-block" />
+              <span className="size-2.5 rounded-full bg-zinc-300 dark:bg-zinc-700 inline-block" />
             </div>
 
+            <div className="flex items-center gap-1.5 font-mono text-zinc-600 dark:text-zinc-400">
+              <FileCode2 className="size-3.5" />
+              <span>{currentTab.filename}</span>
+              <span className="text-[10px] text-zinc-400">({currentTab.language})</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-zinc-500 font-mono text-[11px]">
+            <span className="tabular-nums">{charCount.toLocaleString()} chars</span>
+            <span>·</span>
+            <span className="tabular-nums">~{estimatedTokens.toLocaleString()} tokens</span>
+          </div>
+        </div>
+
+        {/* Studio Tabs & Actions */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-white dark:bg-zinc-950/60 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center flex-wrap gap-1 bg-zinc-100 dark:bg-zinc-900 p-0.5 rounded-md">
+            {TABS.map((tab) => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-colors ${
+                    isActive
+                      ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-50 shadow-xs font-medium"
+                      : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                  }`}
+                >
+                  <Icon className="size-3.5" />
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="flex items-center justify-end gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={downloadPromptFile}
-              className="h-8 text-xs text-neutral-700 dark:text-neutral-300"
+              className="h-8 text-xs border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
             >
               <Download className="size-3.5 mr-1.5" />
               Download
@@ -252,7 +331,7 @@ ${brief.buildPhases.map((p) => `### ${p.phase}\n${p.tasks.map((t) => `- [ ] ${t}
             <Button
               size="sm"
               onClick={copyToClipboard}
-              className="h-8 text-xs font-semibold bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900"
+              className="h-8 px-3.5 text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 rounded-md shadow-xs transition-colors"
             >
               {copied ? (
                 <>
@@ -269,20 +348,27 @@ ${brief.buildPhases.map((p) => `### ${p.phase}\n${p.tasks.map((t) => `- [ ] ${t}
           </div>
         </div>
 
-        {/* Code Content Viewport */}
-        <div className="p-4 sm:p-5">
-          <pre className="relative overflow-auto rounded-lg bg-neutral-950 text-neutral-100 p-4 sm:p-5 text-xs sm:text-sm font-mono leading-relaxed max-h-[500px] border border-neutral-800 selection:bg-neutral-800">
+        {/* Code Viewport - Minimalist Dark Canvas */}
+        <div className="bg-[#09090b] p-4 sm:p-5">
+          <pre className="relative overflow-auto text-zinc-200 text-xs sm:text-[13px] font-mono leading-relaxed max-h-[500px] selection:bg-zinc-800">
             <code>{currentPrompt}</code>
           </pre>
         </div>
 
-        <div className="px-5 py-3 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900 text-xs text-neutral-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        {/* Bottom Integration Footer */}
+        <div className="px-4 py-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs text-zinc-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <span>
-            Compatible with Cursor, Claude Code, GitHub Copilot, Windsurf, and ChatGPT.
+            Save as <code className="font-mono text-zinc-800 dark:text-zinc-200">{currentTab.filename}</code> in your repository root.
           </span>
-          <span className="font-mono text-[11px] text-neutral-400">
-            UTF-8 Plain Text
-          </span>
+          <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-400">
+            <span>Cursor</span>
+            <span>·</span>
+            <span>Claude Code</span>
+            <span>·</span>
+            <span>Copilot</span>
+            <span>·</span>
+            <span>Windsurf</span>
+          </div>
         </div>
       </div>
     </div>

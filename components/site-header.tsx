@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Sparkles, RotateCcw } from "lucide-react"
+import { RotateCcw } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { clearBrief } from "@/lib/store"
@@ -14,65 +14,69 @@ export function SiteHeader() {
 
   function handleReset() {
     clearBrief()
-    toast.info("Started a fresh project workspace.")
+    toast.info("Workspace reset.")
     router.push("/")
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-neutral-200/80 dark:border-neutral-800/80 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto flex h-14 items-center justify-between gap-8 px-4 sm:px-6 lg:px-8">
-        {/* Zone 1: Brand wordmark */}
+    <header className="sticky top-0 z-50 w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md transition-colors">
+      <div className="max-w-7xl mx-auto flex h-14 items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+        {/* Brand wordmark - Clean & Minimal */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 text-base font-bold tracking-tight text-neutral-900 dark:text-neutral-50 whitespace-nowrap shrink-0 hover:opacity-85 transition-opacity"
+          className="flex items-center gap-2.5 text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap shrink-0 hover:opacity-80 transition-opacity"
         >
-          <span className="flex size-7 items-center justify-center rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-mono text-xs font-semibold">
-            AP
-          </span>
-          <span>AI Project Planner</span>
+          <div className="flex size-6 items-center justify-center rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-mono text-[11px] font-bold">
+            P
+          </div>
+          <span className="font-semibold tracking-tight">AI Project Planner</span>
         </Link>
 
-        {/* Zone 2: Concise single-line navigation links */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-neutral-600 dark:text-neutral-400">
+        {/* Minimalist Segment Navigation */}
+        <nav className="hidden md:flex items-center gap-1 p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-xs font-medium">
           <Link
             href="/"
-            className={`whitespace-nowrap shrink-0 transition-colors hover:text-neutral-900 dark:hover:text-neutral-100 ${
-              pathname === "/" ? "text-neutral-900 dark:text-neutral-100 font-semibold" : ""
+            className={`px-3 py-1 rounded-md transition-all ${
+              pathname === "/"
+                ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 shadow-xs font-semibold"
+                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
             }`}
           >
-            Concept
+            1. Ideate
           </Link>
           <Link
             href="/brief"
-            className={`whitespace-nowrap shrink-0 transition-colors hover:text-neutral-900 dark:hover:text-neutral-100 ${
-              pathname === "/brief" ? "text-neutral-900 dark:text-neutral-100 font-semibold" : ""
+            className={`px-3 py-1 rounded-md transition-all ${
+              pathname === "/brief"
+                ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 shadow-xs font-semibold"
+                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
             }`}
           >
-            Project Brief
+            2. Project Brief
           </Link>
           <Link
             href="/prompt"
-            className={`whitespace-nowrap shrink-0 transition-colors hover:text-neutral-900 dark:hover:text-neutral-100 ${
-              pathname === "/prompt" ? "text-neutral-900 dark:text-neutral-100 font-semibold" : ""
+            className={`px-3 py-1 rounded-md transition-all ${
+              pathname === "/prompt"
+                ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 shadow-xs font-semibold"
+                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
             }`}
           >
-            Prompt &amp; Topology
+            3. Prompts &amp; Schema
           </Link>
         </nav>
 
-        {/* Zone 3: Primary Action & Theme */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        {/* Actions & Theme */}
+        <div className="flex items-center gap-2 shrink-0">
           <ThemeToggle />
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            asChild
-            className="h-8 text-xs font-medium whitespace-nowrap shrink-0 hidden sm:inline-flex"
+            onClick={handleReset}
+            className="h-8 px-2.5 text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hidden sm:inline-flex"
           >
-            <Link href="/" onClick={handleReset}>
-              <RotateCcw className="size-3.5 mr-1.5" />
-              New Project
-            </Link>
+            <RotateCcw className="size-3.5 mr-1.5" />
+            Reset
           </Button>
         </div>
       </div>

@@ -46,7 +46,7 @@ export default function BriefPage() {
     const md = generateMarkdown(brief)
     navigator.clipboard.writeText(md)
     setCopied(true)
-    toast.success("Brief copied to clipboard in Markdown format!")
+    toast.success("Brief copied to clipboard.")
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -64,9 +64,9 @@ export default function BriefPage() {
       if (!res.ok) throw new Error("Refinement failed")
       const updated: ProjectBrief = await res.json()
       updateBrief(() => updated)
-      toast.success(`Successfully enhanced: ${action.replace("-", " ")}`)
+      toast.success(`Enhanced: ${action.replace("-", " ")}`)
     } catch {
-      toast.error("Failed to enhance brief. Please try again.")
+      toast.error("Failed to enhance brief.")
     } finally {
       setIsRefining(false)
     }
@@ -82,9 +82,9 @@ export default function BriefPage() {
       })
       const result = await res.json()
       if (result.valid) {
-        toast.success("Architecture validated! Schema structure is 100% compliant.")
+        toast.success("Schema & architecture validated successfully.")
       } else {
-        toast.error(`Validation issues found: ${result.errors?.join(", ")}`)
+        toast.error(`Validation issues: ${result.errors?.join(", ")}`)
       }
     } catch {
       toast.error("Failed to run validation.")
@@ -99,22 +99,23 @@ export default function BriefPage() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `${(brief.projectName || "project-brief").toLowerCase().replace(/\s+/g, "-")}.md`
+    a.download = `${(brief.projectName || "project-brief").toLowerCase().replace(/[^a-z0-9]/g, "-")}.md`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success("Downloaded project brief (.md)")
+    toast.success("Downloaded Markdown brief.")
   }
 
   function handleDownloadJson() {
-    const jsonStr = JSON.stringify(brief, null, 2)
-    const blob = new Blob([jsonStr], { type: "application/json" })
+    const blob = new Blob([JSON.stringify(brief, null, 2)], {
+      type: "application/json",
+    })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `${(brief.projectName || "project-brief").toLowerCase().replace(/\s+/g, "-")}.json`
+    a.download = `${(brief.projectName || "project-brief").toLowerCase().replace(/[^a-z0-9]/g, "-")}.json`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success("Downloaded project specification (.json)")
+    toast.success("Downloaded JSON specification.")
   }
 
   function generateMarkdown(b: ProjectBrief): string {
@@ -129,23 +130,23 @@ ${b.targetUsers.map((u) => `- ${u}`).join("\n")}
 ## Core Features
 ${b.coreFeatures.map((f) => `- ${f}`).join("\n")}
 
-## Technical Stack
-${b.techStack
-  .map((cat) => `### ${cat.category}\n${cat.items.map((i) => `- ${i}`).join("\n")}`)
-  .join("\n\n")}
+## Technology Stack
+${b.techStack.map((t) => `### ${t.category}\n${t.items.map((i) => `- ${i}`).join("\n")}`).join("\n\n")}
 
-## Route Topology
+## Route Topology & API Contracts
 ${b.routes.map((r) => `- \`${r.path}\`: ${r.description}`).join("\n")}
 
-## Data Entities
+## Relational Schema
 ${b.dataModel
   .map(
-    (e) =>
-      `### ${e.name}\n${e.fields.map((f) => `- \`${f.name}\`: ${f.type}`).join("\n")}`
+    (e) => `### ${e.name}
+| Field | Type |
+|---|---|
+${e.fields.map((f) => `| \`${f.name}\` | \`${f.type}\` |`).join("\n")}`
   )
   .join("\n\n")}
 
-## Phased Implementation Plan
+## Implementation Roadmap
 ${b.buildPhases
   .map((p) => `### ${p.phase}\n${p.tasks.map((t) => `- [ ] ${t}`).join("\n")}`)
   .join("\n\n")}
@@ -156,29 +157,32 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 py-2">
+    <div className="max-w-6xl mx-auto space-y-6 py-4 sm:py-6">
       <StepIndicator />
 
       {/* Header & Workbench Actions */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-5">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Input
-              value={brief.projectName || "Project Specification"}
-              onChange={(e) =>
-                updateBrief((b) => ({ ...b, projectName: e.target.value }))
-              }
-              className="text-2xl sm:text-3xl font-bold tracking-tight bg-transparent border-none p-0 h-auto focus-visible:ring-0 text-neutral-900 dark:text-neutral-50"
-            />
-          </div>
-          <div className="flex items-center gap-2 text-xs text-neutral-500 font-mono">
-            <span>{brief.routes.length} Routes</span>
-            <span aria-hidden="true">·</span>
-            <span>{brief.dataModel.length} Entities</span>
-            <span aria-hidden="true">·</span>
-            <span>{brief.buildPhases.length} Phases</span>
-            <span aria-hidden="true">·</span>
-            <span>{brief.risks.length} Risks Identified</span>
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+        <div className="space-y-1.5 flex-1">
+          <Input
+            value={brief.projectName || "Project Specification"}
+            onChange={(e) =>
+              updateBrief((b) => ({ ...b, projectName: e.target.value }))
+            }
+            className="text-2xl sm:text-3xl font-semibold tracking-tight bg-transparent border-none p-0 h-auto focus-visible:ring-0 text-zinc-950 dark:text-zinc-50"
+          />
+          <div className="flex items-center flex-wrap gap-2 text-xs font-mono">
+            <span className="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/60">
+              {brief.routes.length} Routes
+            </span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/60">
+              {brief.dataModel.length} Entities
+            </span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/60">
+              {brief.buildPhases.length} Phases
+            </span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/60">
+              {brief.risks.length} Risks
+            </span>
           </div>
         </div>
 
@@ -188,12 +192,12 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
             size="sm"
             onClick={handleValidate}
             disabled={isValidating}
-            className="h-8 text-xs text-neutral-700 dark:text-neutral-300"
+            className="h-8 text-xs border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
             {isValidating ? (
               <Loader2 className="size-3.5 mr-1.5 animate-spin" />
             ) : (
-              <ShieldCheck className="size-3.5 mr-1.5 text-neutral-500" />
+              <ShieldCheck className="size-3.5 mr-1.5 text-zinc-500" />
             )}
             Validate
           </Button>
@@ -203,31 +207,31 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
             size="sm"
             onClick={() => handleRefine("expand-features")}
             disabled={isRefining}
-            className="h-8 text-xs text-neutral-700 dark:text-neutral-300"
+            className="h-8 text-xs border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
             {isRefining ? (
               <Loader2 className="size-3.5 mr-1.5 animate-spin" />
             ) : (
-              <Sparkles className="size-3.5 mr-1.5 text-neutral-500" />
+              <Sparkles className="size-3.5 mr-1.5 text-zinc-500" />
             )}
-            AI Expand
+            AI Refine
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleCopyMarkdown}
-            className="h-8 text-xs text-neutral-700 dark:text-neutral-300"
+            className="h-8 text-xs border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
             {copied ? <Check className="size-3.5 mr-1.5" /> : <Copy className="size-3.5 mr-1.5" />}
-            {copied ? "Copied" : "Copy Markdown"}
+            {copied ? "Copied" : "Copy"}
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleDownloadMarkdown}
-            className="h-8 text-xs text-neutral-700 dark:text-neutral-300"
+            className="h-8 text-xs border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
             <Download className="size-3.5 mr-1.5" />
             .MD
@@ -237,7 +241,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
             variant="outline"
             size="sm"
             onClick={handleDownloadJson}
-            className="h-8 text-xs text-neutral-700 dark:text-neutral-300"
+            className="h-8 text-xs border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
             <Download className="size-3.5 mr-1.5" />
             .JSON
@@ -246,10 +250,10 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
           <Button
             size="sm"
             asChild
-            className="h-8 text-xs font-semibold bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900"
+            className="h-8 text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 rounded-lg shadow-xs"
           >
             <Link href="/prompt">
-              Next: Prompt &amp; ERD
+              Prompts &amp; Topology
               <ArrowRight className="size-3.5 ml-1.5" />
             </Link>
           </Button>
@@ -259,15 +263,15 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
       {/* Main Grid Sections */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Summary — Full Width */}
-        <section className="md:col-span-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm space-y-3">
+        <section className="md:col-span-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 space-y-3 shadow-xs">
           <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-neutral-500" />
-            <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-              Executive Summary &amp; Vision
+            <Sparkles className="size-4 text-zinc-500 dark:text-zinc-400" />
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+              Project Overview &amp; Summary
             </h2>
           </div>
           <Textarea
-            className="min-h-24 text-sm leading-relaxed border-neutral-200 dark:border-neutral-800"
+            className="min-h-24 text-sm leading-relaxed border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/60 text-zinc-950 dark:text-zinc-50 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600 rounded-lg"
             value={brief.summary}
             onChange={(e) =>
               updateBrief((b) => ({ ...b, summary: e.target.value }))
@@ -277,18 +281,18 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
         </section>
 
         {/* Target Users */}
-        <section className="md:col-span-1 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm space-y-3">
+        <section className="md:col-span-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Users className="size-4 text-neutral-500" />
-              <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                Target User Groups
+              <Users className="size-4 text-zinc-500 dark:text-zinc-400" />
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                Target Users
               </h2>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-xs px-2"
+              className="h-6 text-xs px-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
               onClick={() =>
                 updateBrief((b) => ({ ...b, targetUsers: [...b.targetUsers, ""] }))
               }
@@ -309,7 +313,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                       return { ...b, targetUsers: next }
                     })
                   }
-                  className="h-8 text-xs border-neutral-200 dark:border-neutral-800"
+                  className="h-8 text-xs border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/60 text-zinc-950 dark:text-zinc-50 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600"
                   placeholder="e.g. Remote Developers"
                 />
                 <button
@@ -320,7 +324,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                       targetUsers: b.targetUsers.filter((_, j) => j !== i),
                     }))
                   }
-                  className="p-1 text-neutral-400 hover:text-red-500 transition-colors shrink-0"
+                  className="p-1 text-zinc-400 hover:text-red-500 transition-colors shrink-0"
                 >
                   <Trash2 className="size-3" />
                 </button>
@@ -330,18 +334,18 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
         </section>
 
         {/* Core Features */}
-        <section className="md:col-span-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm space-y-3">
+        <section className="md:col-span-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Layers className="size-4 text-neutral-500" />
-              <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                Core Feature Matrix
+              <Layers className="size-4 text-zinc-500 dark:text-zinc-400" />
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                Core Features
               </h2>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-xs px-2"
+              className="h-6 text-xs px-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
               onClick={() =>
                 updateBrief((b) => ({ ...b, coreFeatures: [...b.coreFeatures, ""] }))
               }
@@ -353,7 +357,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
           <div className="space-y-2">
             {brief.coreFeatures.map((feature, i) => (
               <div key={i} className="flex items-center gap-1.5 group">
-                <span className="text-xs text-neutral-400 font-mono w-5 shrink-0 text-right">
+                <span className="text-xs text-zinc-400 font-mono w-5 shrink-0 text-right">
                   {i + 1}.
                 </span>
                 <Input
@@ -365,7 +369,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                       return { ...b, coreFeatures: next }
                     })
                   }
-                  className="h-8 text-xs border-neutral-200 dark:border-neutral-800"
+                  className="h-8 text-xs border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/60 text-zinc-950 dark:text-zinc-50 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600"
                   placeholder="Feature capability description..."
                 />
                 <button
@@ -376,7 +380,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                       coreFeatures: b.coreFeatures.filter((_, j) => j !== i),
                     }))
                   }
-                  className="p-1 text-neutral-400 hover:text-red-500 transition-colors shrink-0"
+                  className="p-1 text-zinc-400 hover:text-red-500 transition-colors shrink-0"
                 >
                   <Trash2 className="size-3" />
                 </button>
@@ -386,18 +390,18 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
         </section>
 
         {/* Tech Stack Breakdown */}
-        <section className="md:col-span-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm space-y-3">
+        <section className="md:col-span-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Database className="size-4 text-neutral-500" />
-              <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                Technology Stack &amp; Architecture
+              <Database className="size-4 text-zinc-500 dark:text-zinc-400" />
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                Technology Stack &amp; Infrastructure
               </h2>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-xs px-2"
+              className="h-6 text-xs px-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
               onClick={() =>
                 updateBrief((b) => ({
                   ...b,
@@ -413,7 +417,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
             {brief.techStack.map((cat, i) => (
               <div
                 key={i}
-                className="rounded-lg border border-neutral-200 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-neutral-800/30 p-3 space-y-2"
+                className="rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/40 p-3 space-y-2"
               >
                 <div className="flex items-center justify-between gap-1">
                   <Input
@@ -425,7 +429,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                         return { ...b, techStack: next }
                       })
                     }
-                    className="h-6 text-xs font-semibold bg-transparent border-none p-0 focus-visible:ring-0"
+                    className="h-6 text-xs font-semibold text-zinc-950 dark:text-zinc-50 bg-transparent border-none p-0 focus-visible:ring-0"
                   />
                   <button
                     type="button"
@@ -435,15 +439,15 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                         techStack: b.techStack.filter((_, j) => j !== i),
                       }))
                     }
-                    className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
+                    className="p-1 text-zinc-400 hover:text-red-500 transition-colors"
                   >
-                    <Trash2 className="size-2.5" />
+                    <Trash2 className="size-3" />
                   </button>
                 </div>
 
                 <div className="space-y-1.5">
                   {cat.items.map((item, j) => (
-                    <div key={j} className="flex items-center gap-1 group">
+                    <div key={j} className="flex items-center gap-1.5 group">
                       <Input
                         value={item}
                         onChange={(e) =>
@@ -455,7 +459,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                             return { ...b, techStack: next }
                           })
                         }
-                        className="h-7 text-xs bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700"
+                        className="h-7 text-xs bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-950 dark:text-zinc-50 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600"
                       />
                       <button
                         type="button"
@@ -469,16 +473,17 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                             return { ...b, techStack: next }
                           })
                         }
-                        className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
+                        className="p-1 text-zinc-400 hover:text-red-500 transition-colors shrink-0"
                       >
                         <Trash2 className="size-2.5" />
                       </button>
                     </div>
                   ))}
+
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 text-[11px] px-2 w-full text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+                    className="h-6 text-[11px] px-2 w-full text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
                     onClick={() =>
                       updateBrief((b) => {
                         const next = [...b.techStack]
@@ -496,18 +501,18 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
         </section>
 
         {/* Routes & API Architecture */}
-        <section className="md:col-span-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm space-y-3">
+        <section className="md:col-span-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Route className="size-4 text-neutral-500" />
-              <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                Application Route Hierarchy &amp; Endpoints
+              <Route className="size-4 text-zinc-500 dark:text-zinc-400" />
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                Route Hierarchy &amp; API Contracts
               </h2>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-xs px-2"
+              className="h-6 text-xs px-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
               onClick={() =>
                 updateBrief((b) => ({
                   ...b,
@@ -519,11 +524,11 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
             </Button>
           </div>
 
-          <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden divide-y divide-neutral-200 dark:divide-neutral-800">
+          <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden divide-y divide-zinc-200 dark:divide-zinc-800 bg-white dark:bg-zinc-900/60">
             {brief.routes.map((route, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 p-2.5 hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40 transition-colors"
+                className="flex items-center gap-3 p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
               >
                 <Input
                   value={route.path}
@@ -534,7 +539,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                       return { ...b, routes: next }
                     })
                   }
-                  className="h-8 w-44 font-mono text-xs bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 shrink-0 font-semibold text-neutral-800 dark:text-neutral-200"
+                  className="h-8 w-44 font-mono text-xs bg-zinc-50 dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 shrink-0 font-medium text-zinc-950 dark:text-zinc-50 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600"
                   placeholder="/endpoint"
                 />
                 <Input
@@ -546,7 +551,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                       return { ...b, routes: next }
                     })
                   }
-                  className="h-8 text-xs bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 flex-1"
+                  className="h-8 text-xs bg-zinc-50 dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 flex-1 text-zinc-800 dark:text-zinc-200 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600"
                   placeholder="Page/Route functional responsibility"
                 />
                 <button
@@ -557,7 +562,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                       routes: b.routes.filter((_, j) => j !== i),
                     }))
                   }
-                  className="p-1 text-neutral-400 hover:text-red-500 transition-colors shrink-0"
+                  className="p-1 text-zinc-400 hover:text-red-500 transition-colors shrink-0"
                 >
                   <Trash2 className="size-3" />
                 </button>
@@ -567,18 +572,18 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
         </section>
 
         {/* Data Models */}
-        <section className="md:col-span-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm space-y-3">
+        <section className="md:col-span-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Database className="size-4 text-neutral-500" />
-              <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                Relational Data Entities &amp; Schemas
+              <Database className="size-4 text-zinc-500 dark:text-zinc-400" />
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                Relational Data Schema
               </h2>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-xs px-2"
+              className="h-6 text-xs px-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
               onClick={() =>
                 updateBrief((b) => ({
                   ...b,
@@ -597,9 +602,9 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
             {brief.dataModel.map((entity, i) => (
               <div
                 key={i}
-                className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/30 p-3.5 space-y-2.5"
+                className="rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/40 p-3.5 space-y-2.5"
               >
-                <div className="flex items-center justify-between gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2">
+                <div className="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2">
                   <Input
                     value={entity.name}
                     onChange={(e) =>
@@ -609,7 +614,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                         return { ...b, dataModel: next }
                       })
                     }
-                    className="h-7 text-xs font-semibold bg-transparent border-none p-0 focus-visible:ring-0 text-neutral-900 dark:text-neutral-100"
+                    className="h-6 text-xs font-semibold text-zinc-950 dark:text-zinc-50 bg-transparent border-none p-0 focus-visible:ring-0"
                     placeholder="Entity Name"
                   />
                   <button
@@ -620,7 +625,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                         dataModel: b.dataModel.filter((_, j) => j !== i),
                       }))
                     }
-                    className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
+                    className="p-1 text-zinc-400 hover:text-red-500 transition-colors"
                   >
                     <Trash2 className="size-3" />
                   </button>
@@ -640,10 +645,10 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                             return { ...b, dataModel: next }
                           })
                         }
-                        className="h-7 text-xs font-mono flex-1 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700"
+                        className="h-7 text-xs font-mono flex-1 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-950 dark:text-zinc-50 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600"
                         placeholder="fieldName"
                       />
-                      <span className="text-xs text-neutral-400 font-mono">:</span>
+                      <span className="text-xs text-zinc-400 font-mono">:</span>
                       <Input
                         value={field.type}
                         onChange={(e) =>
@@ -655,8 +660,8 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                             return { ...b, dataModel: next }
                           })
                         }
-                        className="h-7 text-xs font-mono w-40 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700"
-                        placeholder="VARCHAR(255)"
+                        className="h-7 text-xs font-mono w-36 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600"
+                        placeholder="VARCHAR"
                       />
                       <button
                         type="button"
@@ -670,7 +675,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                             return { ...b, dataModel: next }
                           })
                         }
-                        className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
+                        className="p-1 text-zinc-400 hover:text-red-500 transition-colors"
                       >
                         <Trash2 className="size-2.5" />
                       </button>
@@ -680,7 +685,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 text-[11px] px-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+                    className="h-6 text-[11px] px-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
                     onClick={() =>
                       updateBrief((b) => {
                         const next = [...b.dataModel]
@@ -701,18 +706,18 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
         </section>
 
         {/* Build Roadmap Phases */}
-        <section className="md:col-span-1 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm space-y-3">
+        <section className="md:col-span-1 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Calendar className="size-4 text-neutral-500" />
-              <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                Phased Roadmap
+              <Calendar className="size-4 text-zinc-500 dark:text-zinc-400" />
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                Roadmap
               </h2>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-xs px-2"
+              className="h-6 text-xs px-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
               onClick={() =>
                 updateBrief((b) => ({
                   ...b,
@@ -731,7 +736,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
             {brief.buildPhases.map((phase, i) => (
               <div
                 key={i}
-                className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30 p-3 space-y-2"
+                className="rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/40 p-3 space-y-2"
               >
                 <div className="flex items-center justify-between gap-1">
                   <Input
@@ -743,7 +748,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                         return { ...b, buildPhases: next }
                       })
                     }
-                    className="h-6 text-xs font-semibold bg-transparent border-none p-0 focus-visible:ring-0 text-neutral-900 dark:text-neutral-100"
+                    className="h-6 text-xs font-semibold text-zinc-950 dark:text-zinc-50 bg-transparent border-none p-0 focus-visible:ring-0"
                   />
                   <button
                     type="button"
@@ -753,16 +758,16 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                         buildPhases: b.buildPhases.filter((_, j) => j !== i),
                       }))
                     }
-                    className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
+                    className="p-1 text-zinc-400 hover:text-red-500 transition-colors"
                   >
                     <Trash2 className="size-2.5" />
                   </button>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {phase.tasks.map((task, j) => (
                     <div key={j} className="flex items-center gap-1.5 group">
-                      <span className="size-1.5 rounded-full bg-neutral-400 shrink-0" />
+                      <span className="size-1 rounded-full bg-zinc-400 shrink-0" />
                       <Input
                         value={task}
                         onChange={(e) =>
@@ -774,7 +779,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                             return { ...b, buildPhases: next }
                           })
                         }
-                        className="h-7 text-xs bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700"
+                        className="h-7 text-xs bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-950 dark:text-zinc-50 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600"
                       />
                       <button
                         type="button"
@@ -788,7 +793,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                             return { ...b, buildPhases: next }
                           })
                         }
-                        className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
+                        className="p-1 text-zinc-400 hover:text-red-500 transition-colors"
                       >
                         <Trash2 className="size-2.5" />
                       </button>
@@ -797,7 +802,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 text-[11px] px-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
+                    className="h-6 text-[11px] px-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
                     onClick={() =>
                       updateBrief((b) => {
                         const next = [...b.buildPhases]
@@ -815,18 +820,18 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
         </section>
 
         {/* Risk & Mitigation Register */}
-        <section className="md:col-span-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm space-y-3">
+        <section className="md:col-span-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="size-4 text-neutral-500" />
-              <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+              <AlertTriangle className="size-4 text-zinc-500 dark:text-zinc-400" />
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                 Risk &amp; Mitigation Register
               </h2>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-xs px-2"
+              className="h-6 text-xs px-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
               onClick={() =>
                 updateBrief((b) => ({
                   ...b,
@@ -842,10 +847,10 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
             {brief.risks.map((item, i) => (
               <div
                 key={i}
-                className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30 p-3 space-y-2"
+                className="rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/40 p-3 space-y-2"
               >
                 <div className="flex items-center justify-between gap-1">
-                  <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider font-semibold">
+                  <span className="text-[10px] font-mono text-zinc-500 uppercase font-semibold">
                     Risk #{i + 1}
                   </span>
                   <button
@@ -856,7 +861,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                         risks: b.risks.filter((_, j) => j !== i),
                       }))
                     }
-                    className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
+                    className="p-1 text-zinc-400 hover:text-red-500 transition-colors"
                   >
                     <Trash2 className="size-2.5" />
                   </button>
@@ -870,7 +875,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                       return { ...b, risks: next }
                     })
                   }
-                  className="h-7 text-xs font-medium bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700"
+                  className="h-7 text-xs font-medium bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-950 dark:text-zinc-50 rounded-md focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600"
                   placeholder="Risk description"
                 />
                 <Textarea
@@ -882,7 +887,7 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
                       return { ...b, risks: next }
                     })
                   }
-                  className="min-h-16 text-xs bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 leading-relaxed"
+                  className="min-h-16 text-xs bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-md leading-relaxed focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600"
                   placeholder="Mitigation strategy"
                 />
               </div>
@@ -892,12 +897,12 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
       </div>
 
       {/* Bottom Navigation */}
-      <div className="flex items-center justify-between pt-4 border-t border-neutral-200 dark:border-neutral-800">
+      <div className="flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-zinc-800">
         <Button
           variant="outline"
           size="sm"
           asChild
-          className="text-xs text-neutral-600 dark:text-neutral-400"
+          className="text-xs text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800"
         >
           <Link href="/">
             <RotateCcw className="size-3.5 mr-1.5" />
@@ -908,10 +913,10 @@ ${b.risks.map((r) => `- **Risk**: ${r.risk}\n  - **Mitigation**: ${r.mitigation}
         <Button
           size="sm"
           asChild
-          className="text-xs font-semibold bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900"
+          className="text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 h-8 px-4 rounded-lg shadow-xs"
         >
           <Link href="/prompt">
-            Proceed to AI Prompt &amp; Topology
+            Proceed to Prompts &amp; Topology
             <ArrowRight className="size-3.5 ml-1.5" />
           </Link>
         </Button>
