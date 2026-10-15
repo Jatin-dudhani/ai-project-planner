@@ -1,22 +1,62 @@
 "use client"
 
 import { useTheme } from "next-themes"
-import { Sun, Moon } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useSyncExternalStore } from "react"
+import { Sun, Moon, Monitor } from "lucide-react"
+
+const emptySubscribe = () => () => {}
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
+
+  if (!mounted) {
+    return (
+      <div
+        className="flex items-center gap-0.5 p-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900 h-8 w-[88px]"
+        aria-hidden="true"
+      />
+    )
+  }
+
+  const themes = [
+    { value: "light", label: "Light", icon: Sun },
+    { value: "system", label: "System", icon: Monitor },
+    { value: "dark", label: "Dark", icon: Moon },
+  ] as const
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="relative rounded-full transition-all duration-500 hover:bg-accent/40 hover:scale-105 active:scale-95 overflow-hidden"
-      aria-label="Toggle theme"
+    <div
+      role="radiogroup"
+      aria-label="Color theme"
+      className="flex items-center gap-0.5 p-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900"
     >
-      <Sun className="size-4 rotate-0 scale-100 transition-all duration-500 dark:-rotate-180 dark:scale-0" />
-      <Moon className="absolute size-4 rotate-180 scale-0 transition-all duration-500 dark:rotate-0 dark:scale-100" />
-    </Button>
+      {themes.map(({ value, label, icon: Icon }) => {
+        const isActive = theme === value
+        return (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={isActive}
+            aria-label={`${label} theme`}
+            title={`Switch to ${label} theme`}
+            onClick={() => setTheme(value)}
+            className={`flex items-center justify-center size-7 rounded-md transition-all ${
+              isActive
+                ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-800 dark:text-neutral-100 font-medium"
+                : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50"
+            }`}
+          >
+            <Icon className="size-3.5" />
+            <span className="sr-only">{label}</span>
+          </button>
+        )
+      })}
+    </div>
   )
 }

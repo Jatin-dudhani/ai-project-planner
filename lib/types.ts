@@ -24,6 +24,7 @@ export interface Risk {
 }
 
 export interface ProjectBrief {
+  projectName?: string;
   summary: string;
   targetUsers: string[];
   coreFeatures: string[];

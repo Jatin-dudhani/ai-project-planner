@@ -1,15 +1,14 @@
 "use client"
 
 import { Suspense } from "react"
-import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Check } from "lucide-react"
 
 const steps = [
-  { href: "/", label: "Idea" },
-  { href: "/brief", label: "Brief" },
-  { href: "/prompt", label: "Prompt" },
+  { href: "/", label: "Concept & Idea", stepNumber: 1 },
+  { href: "/brief", label: "Project Brief", stepNumber: 2 },
+  { href: "/prompt", label: "Starter Prompt & ERD", stepNumber: 3 },
 ]
 
 function StepIndicatorInner() {
@@ -17,57 +16,37 @@ function StepIndicatorInner() {
   const currentIndex = steps.findIndex((s) => s.href === pathname)
 
   return (
-    <nav className="mb-8 animate-fade-up">
-      <ol className="flex items-center justify-center gap-0">
+    <nav aria-label="Workflow Steps" className="mb-8">
+      <ol className="flex items-center justify-center gap-2 sm:gap-3">
         {steps.map((step, index) => {
           const isActive = index === currentIndex
           const isCompleted = index < currentIndex
-          const isFuture = index > currentIndex
 
           return (
-            <li key={step.href} className="flex items-center" style={{ animationDelay: `${index * 80}ms` }}>
+            <li key={step.href} className="flex items-center">
               <Link
-                href={isCompleted ? step.href : "#"}
-                className={cn(
-                  "flex items-center gap-2 text-sm font-medium transition-all duration-500",
-                  isActive && "text-primary",
-                  isCompleted && "text-primary/70 hover:text-primary",
-                  isFuture && "text-muted-foreground/40"
-                )}
-                onClick={(e) => {
-                  if (isFuture) e.preventDefault()
-                }}
+                href={step.href}
+                className={`cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  isActive
+                    ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm"
+                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                }`}
               >
                 <span
-                  className={cn(
-                    "relative flex size-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500",
-                    isActive && "border-primary bg-primary text-primary-foreground animate-glow scale-110",
-                    isCompleted && "border-primary/50 bg-primary/10 text-primary",
-                    isFuture && "border-border/50 bg-transparent text-muted-foreground/40"
-                  )}
+                  className={`flex size-4.5 items-center justify-center rounded-full text-[10px] font-mono font-bold ${
+                    isActive
+                      ? "bg-white/20 text-white dark:bg-black/20 dark:text-black"
+                      : isCompleted
+                      ? "bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200"
+                      : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500"
+                  }`}
                 >
-                  {isCompleted ? (
-                    <Check className="size-4 animate-scale-in" />
-                  ) : (
-                    <span className={cn(isActive && "animate-scale-in")}>{index + 1}</span>
-                  )}
+                  {isCompleted ? <Check className="size-3" /> : step.stepNumber}
                 </span>
-                <span className={cn(
-                  "hidden sm:inline transition-all duration-500",
-                  isActive && "font-semibold",
-                  isCompleted && "font-medium",
-                  isFuture && "text-muted-foreground/40"
-                )}>
-                  {step.label}
-                </span>
+                <span className="whitespace-nowrap">{step.label}</span>
               </Link>
               {index < steps.length - 1 && (
-                <div
-                  className={cn(
-                    "mx-3 h-0.5 w-10 sm:w-16 rounded-full transition-all duration-500",
-                    isCompleted ? "bg-primary/40" : "bg-border/30"
-                  )}
-                />
+                <div className="mx-1 sm:mx-2 w-4 sm:w-8 h-px bg-neutral-200 dark:bg-neutral-800" />
               )}
             </li>
           )
@@ -79,7 +58,13 @@ function StepIndicatorInner() {
 
 export function StepIndicator() {
   return (
-    <Suspense fallback={<nav className="mb-8 animate-fade-up"><ol className="flex items-center justify-center gap-0" /></nav>}>
+    <Suspense
+      fallback={
+        <nav className="mb-8 flex justify-center">
+          <div className="h-8 w-64 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse" />
+        </nav>
+      }
+    >
       <StepIndicatorInner />
     </Suspense>
   )

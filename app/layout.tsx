@@ -1,30 +1,26 @@
-import { Syne, DM_Sans, Geist_Mono } from "next/font/google"
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "next-themes"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { Toaster } from "@/components/ui/sonner"
 
-const syne = Syne({
-  variable: "--font-heading",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-})
-
-const dmSans = DM_Sans({
-  variable: "--font-body",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 })
 
-const geistMono = Geist_Mono({
+const jetBrainsMono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
 })
 
 export const metadata = {
-  title: "AI Project Planner",
-  description: "Turn your app ideas into actionable project briefs with AI",
+  title: "AI Project Planner — System Architecture & Starter Prompts",
+  description:
+    "Transform application concepts into structured technical briefs, relational schemas, route hierarchies, and master AI coding prompts.",
 }
 
 export default function RootLayout({
@@ -33,23 +29,24 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${syne.variable} ${dmSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
-      <body className="antialiased min-h-screen flex flex-col">
-        <div className="fixed inset-0 z-[-3] overflow-hidden pointer-events-none" aria-hidden="true">
-          <div className="absolute -top-40 -left-40 size-96 rounded-full bg-primary/8 animate-orb-drift blur-3xl" />
-          <div className="absolute -bottom-40 -right-40 size-80 rounded-full bg-primary/10 animate-orb-drift-2 blur-3xl" />
-          <div className="absolute top-1/4 left-1/2 size-64 rounded-full bg-accent/10 animate-float-slow blur-3xl" />
-          <div className="absolute bottom-1/3 right-1/4 size-72 rounded-full bg-chart-3/8 animate-orb-drift blur-3xl" />
-        </div>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <html
+      lang="en"
+      className={`${plusJakartaSans.variable} ${jetBrainsMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="antialiased min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 font-sans">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <SiteHeader />
-          <main id="main-content" className="flex-1 w-full px-4 md:px-8 py-6 md:py-8">
-            <div className="w-full max-w-7xl mx-auto">
-              {children}
-            </div>
+          <main id="main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6">
+            <div className="w-full max-w-7xl mx-auto">{children}</div>
           </main>
           <SiteFooter />
-          <Toaster />
+          <Toaster position="bottom-right" richColors />
         </ThemeProvider>
       </body>
     </html>
