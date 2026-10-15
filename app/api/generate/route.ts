@@ -49,8 +49,12 @@ Make the response practical, specific, and actionable.`,
     return NextResponse.json(result.object)
   } catch (error) {
     console.error("Generation error:", error)
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "An error occurred while generating the brief. Please try again."
     return NextResponse.json(
-      { error: "An error occurred while generating the brief. Please try again." },
+      { error: errorMessage },
       { status: 500 }
     )
   }
